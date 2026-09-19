@@ -37,6 +37,10 @@ def test_import_dedup_raw_bytes_and_outputs(tmp_path):
     again = service.import_temp(write_temp(service, CSV), "renamed.csv")
     assert again["status"] == "already_imported"
     assert service.db.status()["shots"] == 1
+    from square_drive_connector.publisher import publish
+    publish(service.db, service.settings.drive_output_dir, service.settings.local_data_dir)
+    lines = (service.settings.drive_output_dir / "all_shots.csv").read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 2  # a rebuild remains derived from SQLite, never append-only
 
 
 def test_overlap_needs_review_and_is_not_counted(tmp_path):

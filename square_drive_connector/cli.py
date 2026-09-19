@@ -10,7 +10,7 @@ import uvicorn
 from .app import create_app
 from .config import initialize_env, load_settings
 from .service import ImportService
-from .publisher import publish_pending
+from .publisher import publish, publish_pending
 
 
 def main() -> None:
@@ -38,7 +38,11 @@ def main() -> None:
         print(json.dumps({"local_data_dir": str(settings.local_data_dir), "local_data_exists": settings.local_data_dir.is_dir(), "drive_output_dir": str(settings.drive_output_dir) if settings.drive_output_dir else None, "drive_output_exists": bool(settings.drive_output_dir and settings.drive_output_dir.is_dir()), "timezone": settings.timezone, "port": settings.port}, indent=2))
     elif args.command == "status": print(json.dumps(service.db.status(), indent=2))
     elif args.command == "rebuild-outputs":
-        print("written_to_sync_folder" if publish_pending(service.db, settings.drive_output_dir, settings.local_data_dir) else "pending")
+        if settings.drive_output_dir is None:
+            print("pending (DRIVE_OUTPUT_DIR is not configured)")
+        else:
+            publish(service.db, settings.drive_output_dir, settings.local_data_dir)
+            print("written_to_sync_folder")
     elif args.command == "reconcile":
         with service.db.connect() as c:
             if args.accept:
