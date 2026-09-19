@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import sys
 from pathlib import Path
 
@@ -11,6 +12,17 @@ from .app import create_app
 from .config import initialize_env, load_settings
 from .service import ImportService
 from .publisher import publish, publish_pending
+
+
+def configure_logging(local_data_dir: Path) -> None:
+    """Logs operational IDs/statuses only; never request headers or upload tokens."""
+    log_dir = local_data_dir / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+        handlers=[logging.FileHandler(log_dir / "square-drive.log", encoding="utf-8"), logging.StreamHandler()],
+    )
 
 
 def main() -> None:
@@ -33,7 +45,8 @@ def main() -> None:
     except ValueError as e: parser.error(str(e))
     service = ImportService(settings)
     if args.command == "serve":
-        uvicorn.run(create_app(settings), host=settings.listen_address, port=settings.port, log_level="info", access_log=False)
+        configure_logging(settings.local_data_dir)
+        uvicorn.run(create_app(settings), host=settings.listen_address, port=settings.port, log_level="info", log_config=None, access_log=False)
     elif args.command == "doctor":
         print(json.dumps({"local_data_dir": str(settings.local_data_dir), "local_data_exists": settings.local_data_dir.is_dir(), "drive_output_dir": str(settings.drive_output_dir) if settings.drive_output_dir else None, "drive_output_exists": bool(settings.drive_output_dir and settings.drive_output_dir.is_dir()), "timezone": settings.timezone, "port": settings.port}, indent=2))
     elif args.command == "status": print(json.dumps(service.db.status(), indent=2))

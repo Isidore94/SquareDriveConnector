@@ -78,7 +78,7 @@ Originals are byte-for-byte copies. Shot rows retain source row number, original
 
 ## Recovery, firewall, and startup
 
-Publication jobs survive restarts. The server attempts publications after imports and on startup; unavailable/locked Drive destinations remain `pending` and can be retried with `rebuild-outputs`. The iPhone never waits for cloud sync.
+Publication jobs survive restarts. The server attempts publications after imports and on startup; unavailable/locked Drive destinations remain `pending` and can be retried with `rebuild-outputs`. The iPhone never waits for cloud sync. Operational logs are at `LOCAL_DATA_DIR\logs\square-drive.log`; they record IDs/statuses but never request headers or tokens.
 
 Allow only the configured TCP port on the **Private** profile, substituting the configured port:
 
