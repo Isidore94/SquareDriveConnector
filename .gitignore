@@ -6,3 +6,8 @@ data/
 *.sqlite3
 .pytest_cache/
 *.egg-info/
+
+# PyInstaller build artifacts (see build_exe.ps1)
+build/
+dist/
+*.spec

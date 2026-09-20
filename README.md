@@ -88,6 +88,21 @@ New-NetFirewallRule -DisplayName 'Square Drive Connector (Private LAN)' -Directi
 
 Do not add a public-profile rule or router port-forwarding. In Task Scheduler, create a task under the same Windows account that runs Google Drive for desktop, choose **Run only when user is logged on**, trigger **At log on**, and use `C:\path\to\repo\.venv\Scripts\square-drive.exe serve` with the repo as **Start in**. Drive for desktop generally runs per user session; pre-sign-in publishing has not been proven and should not be assumed. Verify after every restart with the authenticated status endpoint and a real file.
 
+## Standalone executable
+
+`build_exe.ps1` packages the receiver with PyInstaller so it runs without the virtual environment:
+
+```powershell
+python -m pip install -e ".[build]"
+.\build_exe.ps1
+```
+
+The build emits `dist\square-drive.exe` and stages `dist\install\`. Copy the executable and your configured `.env` to a stable location outside the repository—`C:\SquareDriveConnector` works—and point Task Scheduler there. **Never schedule the copy under `dist`**, which every rebuild overwrites.
+
+Because the app resolves `.env` relative to the current directory, the scheduled task must set **Start in** to the folder holding `.env`, or it exits reporting a missing `UPLOAD_TOKEN`. To avoid a console window at every logon, run the executable through a one-line `wscript` launcher that sets the working directory and starts it hidden.
+
+Two runtime notes for a one-file build: the bundle runs as a bootloader process plus the real server, so stop it with `Get-Process square-drive | Stop-Process -Force` rather than by the launching PID; and the task shows **Ready** rather than Running once the launcher exits, so confirm the service by the listening port instead.
+
 ## Tests
 
 ```powershell
