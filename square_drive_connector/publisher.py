@@ -23,6 +23,7 @@ def _checksum(path: Path) -> str:
 
 
 def _atomic_bytes(destination: Path, data: bytes) -> None:
+    if destination.exists() and destination.read_bytes() == data: return
     destination.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary = tempfile.mkstemp(prefix=".square-", dir=destination.parent)
     try:
@@ -41,7 +42,7 @@ def _csv_bytes(headers: list[str], rows: list[dict[str, object]]) -> bytes:
     return out.getvalue().encode("utf-8")
 
 
-def publish(db: Database, output: Path, local_data: Path) -> dict[str, object]:
+def publish(db: Database, output: Path) -> dict[str, object]:
     if not output.exists() or not output.is_dir():
         raise FileNotFoundError("DRIVE_OUTPUT_DIR does not exist or is unavailable; it was not created automatically")
     sessions, shots, issues, files = db.export_data()
@@ -52,9 +53,9 @@ def publish(db: Database, output: Path, local_data: Path) -> dict[str, object]:
         shot_rows.append({
             "shot_id": sh["shot_id"], "session_id": sh["session_id"], "file_id": sh["file_id"], "source_row": sh["source_row"], "source_index": sh["source_index"], "club_original": sh["club_original"], "club_normalized": sh["club_normalized"], "session_time": sh["session_time"], "timezone_assumption": sh["timezone"], "place": sh["place"],
             "ball_speed_mph": normalized.get("Ball Speed(mph)"), "apex_yd": normalized.get("Apex(yd)"), "carry_yd": normalized.get("Carry(yd)"), "total_yd": normalized.get("Total(yd)"), "offline_yd_right_positive": normalized.get("Offline(yd)"), "launch_direction_right_positive": normalized.get("Launch Direction"), "spin_axis_right_positive": normalized.get("Spin Axis"), "club_path_right_positive": normalized.get("Club Path"), "face_angle_right_positive": normalized.get("Face Angle"),
-            "raw_values": json.dumps(raw, sort_keys=True), "normalized_values": json.dumps(normalized, sort_keys=True), "extra_fields": json.dumps(raw, sort_keys=True), "quality_warnings": sh["warnings_json"],
+            "raw_values": json.dumps(raw, sort_keys=True), "normalized_values": json.dumps(normalized, sort_keys=True), "quality_warnings": sh["warnings_json"],
         })
-    shot_headers = ["shot_id", "session_id", "file_id", "source_row", "source_index", "club_original", "club_normalized", "session_time", "timezone_assumption", "place", "ball_speed_mph", "apex_yd", "carry_yd", "total_yd", "offline_yd_right_positive", "launch_direction_right_positive", "spin_axis_right_positive", "club_path_right_positive", "face_angle_right_positive", "raw_values", "normalized_values", "extra_fields", "quality_warnings"]
+    shot_headers = ["shot_id", "session_id", "file_id", "source_row", "source_index", "club_original", "club_normalized", "session_time", "timezone_assumption", "place", "ball_speed_mph", "apex_yd", "carry_yd", "total_yd", "offline_yd_right_positive", "launch_direction_right_positive", "spin_axis_right_positive", "club_path_right_positive", "face_angle_right_positive", "raw_values", "normalized_values", "quality_warnings"]
     session_rows = [{"session_id": s["session_id"], "file_id": s["file_id"], "session_time": s["session_time"], "original_timestamp_text": s["timestamp_text"], "timezone_assumption": s["timezone"], "place": s["place"], "shot_count": s["shot_count"], "quality_status": s["status"]} for s in sessions]
     session_headers = ["session_id", "file_id", "session_time", "original_timestamp_text", "timezone_assumption", "place", "shot_count", "quality_status"]
     summary: dict[str, list[float]] = defaultdict(list)
@@ -89,14 +90,14 @@ def publish(db: Database, output: Path, local_data: Path) -> dict[str, object]:
     return manifest
 
 
-def publish_pending(db: Database, output: Path | None, local_data: Path) -> bool:
+def publish_pending(db: Database, output: Path | None) -> bool:
     jobs = db.pending()
     if not jobs: return True
     if output is None:
         for job in jobs: db.publication(job["job_id"], "pending", "DRIVE_OUTPUT_DIR is not configured")
         return False
     try:
-        publish(db, output, local_data)
+        publish(db, output)
     except (OSError, ValueError) as e:
         for job in jobs: db.publication(job["job_id"], "pending", str(e))
         return False

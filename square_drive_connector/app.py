@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 import tempfile
 from pathlib import Path
 from urllib.parse import unquote
@@ -26,17 +27,17 @@ def create_app(settings: Settings) -> FastAPI:
     app = FastAPI(title="Square Drive Connector", docs_url=None, redoc_url=None)
 
     def authenticated(authorization: str | None):
-        if not authorization or not authorization.startswith("Bearer ") or not __import__("secrets").compare_digest(authorization[7:], settings.upload_token):
+        if not authorization or not authorization.startswith("Bearer ") or not secrets.compare_digest(authorization[7:], settings.upload_token):
             raise HTTPException(401, detail="Unauthorized", headers={"WWW-Authenticate": "Bearer"})
 
     @app.on_event("startup")
-    def recover_publication(): publish_pending(service.db, settings.drive_output_dir, settings.local_data_dir)
+    def recover_publication(): publish_pending(service.db, settings.drive_output_dir)
 
     @app.get("/api/status")
     def status(authorization: str | None = Header(default=None)):
         authenticated(authorization)
         result = service.db.status()
-        result.update({"ok": True, "drive_output_configured": settings.drive_output_dir is not None, "drive_status": "pending" if result["pending_publications"] else "not_published"})
+        result.update({"ok": True, "drive_output_configured": settings.drive_output_dir is not None, "drive_status": "pending" if result["pending_publications"] else "written_to_sync_folder"})
         return result
 
     @app.post("/api/square/upload")
@@ -60,10 +61,7 @@ def create_app(settings: Settings) -> FastAPI:
                     f.write(chunk)
                 f.flush(); os.fsync(f.fileno())
             response = service.import_temp(Path(temporary), filename)
-            if content_type == "application/octet-stream" and response["status"] == "rejected":
-                return JSONResponse(response, status_code=422)
             return JSONResponse(response, status_code=200 if response["ok"] else 422)
-        except HTTPException: raise
         finally:
             Path(temporary).unlink(missing_ok=True)
     return app

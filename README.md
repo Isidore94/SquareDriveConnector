@@ -74,7 +74,7 @@ Example successful response (IDs vary):
 
 The output folder receives `README.md`, `manifest.json`, `sessions.csv`, `all_shots.csv`, `club_summary.csv`, `quality_warnings.csv`, `raw/<sha256>.csv`, and `sessions/<session_id>/{metadata.json,shots.csv}`. Builds are staged then atomically replaced; the manifest is written last. Unrelated output-folder files are untouched.
 
-Originals are byte-for-byte copies. Shot rows retain source row number, original column labels, raw values, and a JSON `extra_fields` column for unfamiliar columns. Directional Square values are normalized as numerical values with right positive and left negative; this is independent of handedness. Zeros remain zeros. Zero ClubSpeed/SmashFactor and repeated impact values are flagged as potential placeholders rather than converted. Session time comes from Square's metadata and carries the configured timezone assumption; upload time is stored separately; no per-shot timestamps are invented.
+Originals are byte-for-byte copies. Shot rows retain source row number, original column labels, and raw values. Directional Square values are normalized as numerical values with right positive and left negative; this is independent of handedness. Zeros remain zeros. Zero ClubSpeed/SmashFactor are flagged as potential placeholders rather than converted. Session time comes from Square's metadata and carries the configured timezone assumption; upload time is stored separately; no per-shot timestamps are invented.
 
 ## Recovery, firewall, and startup
 
