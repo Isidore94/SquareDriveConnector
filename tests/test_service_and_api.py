@@ -38,7 +38,7 @@ def test_import_dedup_raw_bytes_and_outputs(tmp_path):
     assert again["status"] == "already_imported"
     assert service.db.status()["shots"] == 1
     from square_drive_connector.publisher import publish
-    publish(service.db, service.settings.drive_output_dir, service.settings.local_data_dir)
+    publish(service.db, service.settings.drive_output_dir)
     lines = (service.settings.drive_output_dir / "all_shots.csv").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 2  # a rebuild remains derived from SQLite, never append-only
 
@@ -63,7 +63,7 @@ def test_pending_publication_survives_restart_and_retries(tmp_path):
     out = tmp_path / "drive"; out.mkdir()
     restarted = ImportService(Settings(config.listen_address, config.port, config.upload_token, config.local_data_dir, out, config.timezone, config.max_upload_bytes))
     from square_drive_connector.publisher import publish_pending
-    assert publish_pending(restarted.db, out, restarted.settings.local_data_dir)
+    assert publish_pending(restarted.db, out)
     assert (out / "manifest.json").exists()
 
 
@@ -87,4 +87,4 @@ def test_rejected_csv_preserves_raw_and_octet_requires_square_format(tmp_path):
     reply = client.post("/api/square/upload", content=b"not,csv\n", headers=headers)
     assert reply.status_code == 422
     assert reply.json()["status"] == "rejected"
-    assert list((app.state._state if False else tmp_path / "local" / "raw").glob("*.csv"))
+    assert list((tmp_path / "local" / "raw").glob("*.csv"))

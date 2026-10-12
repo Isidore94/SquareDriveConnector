@@ -42,7 +42,7 @@ def _csv_bytes(headers: list[str], rows: list[dict[str, object]]) -> bytes:
     return out.getvalue().encode("utf-8")
 
 
-def publish(db: Database, output: Path, local_data: Path) -> dict[str, object]:
+def publish(db: Database, output: Path) -> dict[str, object]:
     if not output.exists() or not output.is_dir():
         raise FileNotFoundError("DRIVE_OUTPUT_DIR does not exist or is unavailable; it was not created automatically")
     sessions, shots, issues, files = db.export_data()
@@ -90,14 +90,14 @@ def publish(db: Database, output: Path, local_data: Path) -> dict[str, object]:
     return manifest
 
 
-def publish_pending(db: Database, output: Path | None, local_data: Path) -> bool:
+def publish_pending(db: Database, output: Path | None) -> bool:
     jobs = db.pending()
     if not jobs: return True
     if output is None:
         for job in jobs: db.publication(job["job_id"], "pending", "DRIVE_OUTPUT_DIR is not configured")
         return False
     try:
-        publish(db, output, local_data)
+        publish(db, output)
     except (OSError, ValueError) as e:
         for job in jobs: db.publication(job["job_id"], "pending", str(e))
         return False

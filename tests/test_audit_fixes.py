@@ -60,7 +60,7 @@ def test_publish_skips_rewriting_unchanged_files(tmp_path):
     shots = output / "sessions" / session_id / "shots.csv"
     os.utime(shots, ns=(1_000_000_000 * 10**9, 1_000_000_000 * 10**9))
     before = json.loads((output / "manifest.json").read_text())["generated_at"]
-    publish(service.db, output, service.settings.local_data_dir)
+    publish(service.db, output)
     assert json.loads((output / "manifest.json").read_text())["generated_at"] != before  # manifest still rewritten
     assert shots.stat().st_mtime_ns == 1_000_000_000 * 10**9
 
@@ -99,7 +99,7 @@ def test_accepted_review_session_is_published(tmp_path):
     second = service.import_temp(write_temp(service, CSV_TWO), "two.csv")
     assert second["status"] == "needs_review"
     assert service.db.accept_review(second["file_id"]) is True
-    assert publish_pending(service.db, service.settings.drive_output_dir, service.settings.local_data_dir) is True
+    assert publish_pending(service.db, service.settings.drive_output_dir) is True
     output = service.settings.drive_output_dir
     assert second["session_id"] in (output / "sessions.csv").read_text(encoding="utf-8")
     shot_lines = [l for l in (output / "all_shots.csv").read_text(encoding="utf-8").splitlines()[1:] if second["session_id"] in l]

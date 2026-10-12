@@ -54,14 +54,14 @@ def main() -> None:
         if settings.drive_output_dir is None:
             print("pending (DRIVE_OUTPUT_DIR is not configured)")
         else:
-            publish(service.db, settings.drive_output_dir, settings.local_data_dir)
+            publish(service.db, settings.drive_output_dir)
             print("written_to_sync_folder")
     elif args.command == "reconcile":
         with service.db.connect() as c:
             if args.accept:
                 accepted = service.db.accept_review(args.accept)
                 print("accepted" if accepted else "No review record found")
-                if accepted: publish_pending(service.db, settings.drive_output_dir, settings.local_data_dir)
+                if accepted: publish_pending(service.db, settings.drive_output_dir)
             else:
                 rows = c.execute("SELECT file_id,original_filename,received_at,message FROM files WHERE status='needs_review'").fetchall()
                 print(json.dumps([dict(r) for r in rows], indent=2))
