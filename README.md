@@ -110,3 +110,13 @@ pytest -q
 ```
 
 Tests use synthetic fixtures only; a complete real export and the final iPhone/Drive-web flow remain user-side validation steps.
+
+## CI
+
+A Windows build artifact is published via the GitHub Actions workflow. To download the latest successful build:
+
+1. Go to the **Actions** tab of this repository.
+2. Click the most recent workflow run named **Windows Build**.
+3. In the **Artifacts** section, download **square-drive-windows-x64**. The ZIP contains `square-drive.exe` and `.env.example` from the staged `dist\install\` bundle.
+
+Extract the bundle to a stable local folder, copy `.env.example` to `.env`, and configure it there. The `.env` file stays local and must never be committed.
