@@ -7,8 +7,8 @@ from square_drive_connector.config import Settings
 from square_drive_connector.service import ImportService
 
 
-CSV = b"Dates,11:50 18 Sep. 2026,Place,Range\nClub,Index,Carry(yd),Offline(yd),ClubSpeed,SmashFactor\nDriver,0,100,R2.0,0,0\n"
-CSV_TWO = b"Dates,11:50 18 Sep. 2026,Place,Range\nClub,Index,Carry(yd),Offline(yd),ClubSpeed,SmashFactor\nDriver,0,100,R2.0,0,0\n7i,1,80,L1.0,0,0\n"
+CSV = b"Dates,11:50 18 Sep. 2026,Place,Range\nClub,Index,Carry(yd),Offline(yd),ClubSpeed,SmashFactor\nDriver,0,100,R2.0,90,1.4\n"
+CSV_TWO = b"Dates,11:50 18 Sep. 2026,Place,Range\nClub,Index,Carry(yd),Offline(yd),ClubSpeed,SmashFactor\nDriver,0,100,R2.0,90,1.4\n7i,1,80,L1.0,70,1.3\n"
 
 
 def settings(tmp_path: Path, drive=True):
