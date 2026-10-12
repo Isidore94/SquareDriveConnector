@@ -36,7 +36,7 @@ def create_app(settings: Settings) -> FastAPI:
     def status(authorization: str | None = Header(default=None)):
         authenticated(authorization)
         result = service.db.status()
-        result.update({"ok": True, "drive_output_configured": settings.drive_output_dir is not None, "drive_status": "pending" if result["pending_publications"] else "not_published"})
+        result.update({"ok": True, "drive_output_configured": settings.drive_output_dir is not None, "drive_status": "pending" if result["pending_publications"] else "written_to_sync_folder"})
         return result
 
     @app.post("/api/square/upload")

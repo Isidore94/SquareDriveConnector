@@ -37,7 +37,9 @@ class ParseResult:
 
 
 def _decode(data: bytes) -> str:
-    for encoding in ("utf-8-sig", "utf-16", "cp1252"):
+    # BOM-less UTF-16 decodes almost any even-length input, so only try it after a BOM.
+    utf16 = ("utf-16",) if data[:2] in (b"\xff\xfe", b"\xfe\xff") else ()
+    for encoding in ("utf-8-sig", *utf16, "cp1252"):
         try:
             return data.decode(encoding)
         except UnicodeDecodeError:

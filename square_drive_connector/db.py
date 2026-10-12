@@ -41,7 +41,8 @@ class Database:
 
     def overlapping_file(self, result: ParseResult):
         if not result.shots: return None
-        fingerprints = [s.fingerprint for s in result.shots]
+        fingerprints = [s.fingerprint for s in result.shots if not s.warnings]
+        if not fingerprints: return None
         marks = ",".join("?" * len(fingerprints))
         with self.connect() as c:
             return c.execute(f"SELECT DISTINCT s.file_id FROM sessions s JOIN shots sh ON sh.session_id=s.session_id WHERE s.status='imported' AND sh.fingerprint IN ({marks}) LIMIT 1", fingerprints).fetchone()

@@ -40,7 +40,8 @@ class ImportService:
         except ValueError as e:
             empty = ParseResult(None, None, None, [], [], [], [str(e)])
             self.db.record(file_id, sha, filename, str(raw_path), empty, self.settings.timezone, "rejected", str(e), None)
-            return {"ok": False, "status": "rejected", "message": str(e), "file_id": file_id, "session_id": None, "shot_count": None, "drive_status": "not_published"}
+            published = publish_pending(self.db, self.settings.drive_output_dir, self.settings.local_data_dir)
+            return {"ok": False, "status": "rejected", "message": str(e), "file_id": file_id, "session_id": None, "shot_count": None, "drive_status": "written_to_sync_folder" if published else "pending"}
         overlap = self.db.overlapping_file(result)
         status = "needs_review" if overlap or not result.shots else "imported"
         session_id = "s_" + uuid.uuid4().hex[:16]

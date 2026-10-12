@@ -4,6 +4,7 @@ import os
 import secrets
 from dataclasses import dataclass
 from pathlib import Path
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dotenv import load_dotenv
 
@@ -29,13 +30,18 @@ def load_settings(env_file: str | Path = ".env", require_token: bool = True) -> 
     if require_token and not token:
         raise ValueError("UPLOAD_TOKEN is required; run square-drive init and edit .env")
     drive = os.getenv("DRIVE_OUTPUT_DIR", "").strip()
+    tz = os.getenv("TIMEZONE", "America/Vancouver")
+    try:
+        ZoneInfo(tz)
+    except ZoneInfoNotFoundError:
+        raise ValueError(f"TIMEZONE '{tz}' is not a known IANA zone name") from None
     return Settings(
         listen_address=os.getenv("LISTEN_ADDRESS", "0.0.0.0"),
         port=int(os.getenv("PORT", "8765")),
         upload_token=token,
         local_data_dir=Path(os.getenv("LOCAL_DATA_DIR", "C:\\SquareDriveConnectorData")).expanduser(),
         drive_output_dir=Path(drive).expanduser() if drive else None,
-        timezone=os.getenv("TIMEZONE", "America/Vancouver"),
+        timezone=tz,
         max_upload_bytes=int(float(os.getenv("MAX_UPLOAD_MIB", "20")) * 1024 * 1024),
     )
 
